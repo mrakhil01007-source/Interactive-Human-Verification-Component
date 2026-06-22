@@ -182,3 +182,123 @@ export function analyzeHand(handLandmarks: { x: number; y: number; z: number }[]
 
   return { isThumbsUp, isTwoFingersRaised };
 }
+
+// ----------------------------------------------------
+// FACE AUTHENTICATION & EMBEDDING UTILITIES
+// ----------------------------------------------------
+
+export interface FaceEmbeddingPoint {
+  x: number;
+  y: number;
+  z: number;
+}
+
+// Extract a normalized 3D landmark mesh
+// Centered on the nose tip (4) and scaled by face width (temple-to-temple: 127 to 356)
+export function extractFaceEmbedding(landmarks: FaceEmbeddingPoint[]): FaceEmbeddingPoint[] {
+  const nose = landmarks[4];
+  const leftTemple = landmarks[127];
+  const rightTemple = landmarks[356];
+
+  if (!nose || !leftTemple || !rightTemple) {
+    return [];
+  }
+
+  const faceWidth = Math.sqrt(
+    Math.pow(leftTemple.x - rightTemple.x, 2) +
+    Math.pow(leftTemple.y - rightTemple.y, 2) +
+    Math.pow(leftTemple.z - rightTemple.z, 2)
+  );
+  if (faceWidth === 0) return [];
+
+  // Normalize all landmarks relative to the nose tip and face width scale
+  return landmarks.map((pt) => ({
+    x: (pt.x - nose.x) / faceWidth,
+    y: (pt.y - nose.y) / faceWidth,
+    z: (pt.z - nose.z) / faceWidth,
+  }));
+}
+
+// Compare two face embeddings and return average Euclidean distance (lower is more similar)
+export function compareFaceEmbeddings(
+  embeddingA: FaceEmbeddingPoint[],
+  embeddingB: FaceEmbeddingPoint[]
+): number {
+  if (embeddingA.length === 0 || embeddingB.length === 0 || embeddingA.length !== embeddingB.length) {
+    return 1.0; // Max difference
+  }
+
+  let totalDist = 0;
+  for (let i = 0; i < embeddingA.length; i++) {
+    const pt1 = embeddingA[i];
+    const pt2 = embeddingB[i];
+    if (pt1 && pt2) {
+      totalDist += Math.sqrt(
+        Math.pow(pt1.x - pt2.x, 2) +
+        Math.pow(pt1.y - pt2.y, 2) +
+        Math.pow(pt1.z - pt2.z, 2)
+      );
+    }
+  }
+
+  return totalDist / embeddingA.length;
+}
+
+// Detect if user has turned head left or right (direction-aware based on mirrored camera coordinates)
+export function detectHeadTurn(
+  landmarks: FaceEmbeddingPoint[]
+): "LEFT" | "RIGHT" | "STRAIGHT" {
+  const leftTemple = landmarks[127];
+  const rightTemple = landmarks[356];
+  const noseTip = landmarks[4];
+
+  if (!leftTemple || !rightTemple || !noseTip) return "STRAIGHT";
+
+  const minX = Math.min(leftTemple.x, rightTemple.x);
+  const maxX = Math.max(leftTemple.x, rightTemple.x);
+
+  const distLeftBound = Math.abs(noseTip.x - minX);
+  const distRightBound = Math.abs(maxX - noseTip.x);
+
+  if (distLeftBound === 0 || distRightBound === 0) return "STRAIGHT";
+
+  const ratio = distLeftBound / distRightBound;
+
+  if (ratio < 0.45) {
+    // If leftTemple.x is smaller, the image left side represents screen-left
+    return leftTemple.x < rightTemple.x ? "LEFT" : "RIGHT";
+  } else if (ratio > 2.2) {
+    return leftTemple.x < rightTemple.x ? "RIGHT" : "LEFT";
+  }
+
+  return "STRAIGHT";
+}
+
+// Detect if user is smiling (mouth width is significantly wider than standard proportions)
+export function detectSmile(landmarks: FaceEmbeddingPoint[]): boolean {
+  const leftMouth = landmarks[61];
+  const rightMouth = landmarks[291];
+  const leftEye = landmarks[33];
+  const rightEye = landmarks[263];
+
+  if (!leftMouth || !rightMouth || !leftEye || !rightEye) return false;
+
+  const mouthWidth = Math.sqrt(
+    Math.pow(leftMouth.x - rightMouth.x, 2) +
+    Math.pow(leftMouth.y - rightMouth.y, 2) +
+    Math.pow(leftMouth.z - rightMouth.z, 2)
+  );
+  
+  const eyeDist = Math.sqrt(
+    Math.pow(leftEye.x - rightEye.x, 2) +
+    Math.pow(leftEye.y - rightEye.y, 2) +
+    Math.pow(leftEye.z - rightEye.z, 2)
+  );
+
+  if (eyeDist === 0) return false;
+
+  const ratio = mouthWidth / eyeDist;
+  
+  // Normal mouth-to-eye width ratio is ~0.72. A smile stretches it to >0.83.
+  return ratio > 0.83;
+}

@@ -35,14 +35,14 @@ export default function Home() {
           </div>
           
           <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-white leading-tight">
-            Verify your humanity,{" "}
+            Secure browser-based{" "}
             <span className="bg-gradient-to-r from-cyan-400 via-teal-300 to-purple-500 bg-clip-text text-transparent">
-              securely in browser.
+              Face Authentication.
             </span>
           </h1>
 
           <p className="text-sm sm:text-base text-slate-400 leading-relaxed">
-            Our biometric engine analyzes video feeds entirely on your local machine using client-side WebAssembly models. No video streams, images, or raw biometric data ever leave your device.
+            Protect your system with state-of-the-art 3D face mesh profile matching and randomized liveness challenges (blink, head turns, smiles). All processing runs locally inside your browser—no images, video streams, or raw biometrics are ever uploaded or stored.
           </p>
 
           {/* Technical Specs List */}
