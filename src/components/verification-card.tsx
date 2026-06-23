@@ -577,8 +577,8 @@ export default function VerificationCard() {
               Enrolled
             </span>
           ) : (
-            <span className="px-2.5 py-1 bg-rose-500/15 border border-rose-500/30 text-rose-400 text-[10px] font-bold uppercase rounded-full tracking-wider">
-              No Face
+            <span className="px-2.5 py-1 bg-slate-800/30 border border-slate-750 text-slate-400 text-[10px] font-bold uppercase rounded-full tracking-wider">
+              Not Enrolled
             </span>
           )}
         </div>
