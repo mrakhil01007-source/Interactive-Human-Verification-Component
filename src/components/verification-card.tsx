@@ -311,8 +311,10 @@ export default function VerificationCard() {
         let faceResult = null;
         try {
           faceResult = faceLandmarker.detectForVideo(video, timestamp);
-        } catch (error) {
+        } catch (error: any) {
           console.error("In-loop face detection error:", error);
+          handleFailure(`Face tracking engine error: ${error.message || error}`);
+          return;
         }
 
         if (faceResult && faceResult.faceLandmarks && faceResult.faceLandmarks.length > 0) {

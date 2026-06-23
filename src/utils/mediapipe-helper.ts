@@ -33,7 +33,6 @@ export async function initMediaPipe() {
         baseOptions: {
           modelAssetPath:
             "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
-          delegate: "GPU",
         },
         runningMode: "VIDEO",
         outputFaceBlendshapes: false,
@@ -46,7 +45,6 @@ export async function initMediaPipe() {
         baseOptions: {
           modelAssetPath:
             "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
-          delegate: "GPU",
         },
         runningMode: "VIDEO",
         numHands: 1,
